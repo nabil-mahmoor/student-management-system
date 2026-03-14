@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -34,12 +35,12 @@ import {
 const items = [
   {
     title: "Students",
-    url: "/",
+    url: "/students",
     icon: User,
   },
   {
     title: "Courses",
-    url: "/",
+    url: "/courses",
     icon: BookOpen,
   },
   {
@@ -50,6 +51,15 @@ const items = [
 ];
 
 export default function AppSidebar() {
+  const pathname = usePathname();
+
+  const linkStyle = (path: string) =>
+    `block px-4 py-2 rounded ${
+      pathname === path
+        ? "bg-sidebar-accent text-foreground font-semibold"
+        : "text-muted-foreground"
+    }`;
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="py-4">
@@ -81,8 +91,10 @@ export default function AppSidebar() {
               {items.slice(0, 2).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
+                    <Link href={item.url} className={linkStyle(item.url)}>
+                      <item.icon
+                        strokeWidth={pathname === item.url ? 2.75 : 2}
+                      />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
