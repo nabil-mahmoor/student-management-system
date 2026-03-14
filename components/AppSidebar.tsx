@@ -62,7 +62,7 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="py-4">
+      <SidebarHeader className="h-16 flex justify-center">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
