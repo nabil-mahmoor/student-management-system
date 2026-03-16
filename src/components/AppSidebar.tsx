@@ -2,7 +2,7 @@
 
 import { signOut } from "@/src/services/auth/auth.actions";
 import type { Session } from "@/src/services/auth/auth.types";
-import { BookOpen, ChevronUp, LogOut, Logs, User } from "lucide-react";
+import { BookMarked, BookOpen, ChevronUp, LogOut, Logs, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,7 +41,7 @@ const items = [
   { 
     title: "Enrollments", 
     url: "/enrollments", 
-    icon: BookOpen 
+    icon: BookMarked, 
   },
   {
     title: "Audit Logs",
