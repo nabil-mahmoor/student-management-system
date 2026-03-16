@@ -1,13 +1,14 @@
 "use client";
 
 import { DataTableColumnHeader } from "@/src/components/DataTableColumnHeader";
+import { DeleteStudentDrawer } from "@/src/components/students/DeleteStudentDrawer";
 import { Button } from "@/src/components/ui/button";
-import { Checkbox } from "@/src/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit } from "lucide-react";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { Checkbox } from "@/src/components/ui/checkbox";
 
-// Column header display names — used by StudentTable's visibility dropdown
 export const columnHeaders: Record<string, string> = {
   studentId: "Student ID",
   firstName: "First Name",
@@ -20,7 +21,6 @@ export const columnHeaders: Record<string, string> = {
   actions: "Actions",
 };
 
-// Only column definitions live here — no data, no JSON imports
 export const columns: ColumnDef<Student>[] = [
   {
     id: "select",
@@ -59,7 +59,7 @@ export const columns: ColumnDef<Student>[] = [
             toast.success("Copied ID", { position: "top-center" });
           }}
         >
-          {row.getValue("studentId")}
+          {studentId}
         </div>
       );
     },
@@ -82,16 +82,16 @@ export const columns: ColumnDef<Student>[] = [
       <DataTableColumnHeader column={column} title={columnHeaders.email} />
     ),
     cell: ({ row }) => {
-      const studentEmail = row.original.email;
+      const email = row.original.email;
       return (
         <div
           className="text-blue-600 dark:text-blue-400 cursor-pointer"
           onClick={() => {
-            navigator.clipboard.writeText(studentEmail);
+            navigator.clipboard.writeText(email);
             toast.success("Copied Email", { position: "top-center" });
           }}
         >
-          {row.getValue("email")}
+          {email}
         </div>
       );
     },
@@ -102,7 +102,9 @@ export const columns: ColumnDef<Student>[] = [
       <div className="text-center font-bold">{columnHeaders.intake}</div>
     ),
     cell: ({ row }) => (
-      <div className="text-center">{row.getValue("intake")}</div>
+      <div className="text-center">
+        {(row.getValue("intake") as string).replace("INTAKE_", "")}
+      </div>
     ),
   },
   {
@@ -134,13 +136,22 @@ export const columns: ColumnDef<Student>[] = [
     header: () => (
       <div className="text-center font-bold">{columnHeaders.actions}</div>
     ),
-    cell: ({ row }) => (
-      <div className="flex justify-center">
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <span className="sr-only">Edit student {row.original.studentId}</span>
-          <Edit className="h-4 w-4 opacity-50" />
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const student = row.original;
+      return (
+        <div className="flex justify-center gap-2">
+          {/* Edit — navigates to /students/:id/edit */}
+          <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+            <Link href={`/students/${student.id}/edit`}>
+              <Edit className="h-4 w-4 opacity-50" />
+              <span className="sr-only">Edit {student.firstName}</span>
+            </Link>
+          </Button>
+
+          {/* Delete — opens confirmation drawer */}
+          <DeleteStudentDrawer student={student} />
+        </div>
+      );
+    },
   },
 ];
