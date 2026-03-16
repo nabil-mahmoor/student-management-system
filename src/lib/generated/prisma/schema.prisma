@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Degree {
+  BCS
+  BSE
+  BCE
+  DBA
+  BIT
+  BIS
+}
+
+enum Intake {
+  INTAKE_40 @map("40")
+  INTAKE_41 @map("41")
+  INTAKE_42 @map("42")
+  INTAKE_43 @map("43")
+}
+
+enum Action {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum Entity {
+  STUDENT
+  COURSE
+  ENROLLMENT
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  DROPPED
+  COMPLETED
+}
+
+model User {
+  id            String     @id
+  name          String
+  email         String
+  emailVerified Boolean    @default(false)
+  image         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  auditLogs     AuditLog[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Student {
+  id          Int          @id @default(autoincrement())
+  studentId   String       @unique
+  firstName   String
+  lastName    String
+  address     String
+  dob         DateTime
+  degree      Degree
+  intake      Intake
+  email       String       @unique
+  enrollments Enrollment[]
+  auditLogs   AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  code        String       @unique
+  name        String
+  description String
+  imageUrl    String
+  tags        String[]
+  enrollments Enrollment[]
+  auditLogs   AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enrollment {
+  id        Int              @id @default(autoincrement())
+  student   Student          @relation(fields: [studentId], references: [id])
+  studentId Int
+  course    Course           @relation(fields: [courseId], references: [id])
+  courseId  Int
+  status    EnrollmentStatus @default(ACTIVE)
+  auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, courseId])
+}
+
+model AuditLog {
+  id       Int    @id @default(autoincrement())
+  action   Action
+  entity   Entity
+  entityId Int
+  changes  Json?
+
+  performedBy String
+  user        User   @relation(fields: [performedBy], references: [id])
+
+  student      Student?    @relation(fields: [studentId], references: [id])
+  studentId    Int?
+  course       Course?     @relation(fields: [courseId], references: [id])
+  courseId     Int?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id])
+  enrollmentId Int?
+
+  createdAt DateTime @default(now())
+}
