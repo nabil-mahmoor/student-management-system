@@ -11,6 +11,7 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -49,6 +50,8 @@ const courseSchema = z.object({
 export default function CreateCourseForm() {
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false)
+
   // ✅ string primitive — was incorrectly typed as String (object wrapper)
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -61,6 +64,7 @@ export default function CreateCourseForm() {
       tags: "", // comma-separated, split on submit
     },
     onSubmit: async ({ value }) => {
+      setIsLoading(true)
       try {
         const res = await fetch("/api/courses", {
           method: "POST",
@@ -85,6 +89,8 @@ export default function CreateCourseForm() {
         router.push("/courses");
       } catch {
         toast.error("Something went wrong. Please try again.");
+      } finally {
+        setIsLoading(false)
       }
     },
     validators: {
@@ -237,8 +243,9 @@ export default function CreateCourseForm() {
         />
       </FieldGroup>
 
-      <Button type="submit" className="w-full mt-12">
-        Create Course
+      <Button disabled={isLoading} type="submit" className="w-full mt-12">
+        {isLoading && <Loader2 className="animate-spin" />}
+        {isLoading ? "Creating..." : "Create Course"}
       </Button>
     </form>
   );
