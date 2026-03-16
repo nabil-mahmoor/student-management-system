@@ -38,7 +38,10 @@ export const studentService = {
     intake: string,
     degree: string,
   ): Promise<GenerateIdResult> {
-    const intakeNumber = INTAKE_NUMBER[intake];
+    const intakeKey = intake.startsWith("INTAKE_")
+      ? intake
+      : `INTAKE_${intake}`;
+    const intakeNumber = INTAKE_NUMBER[intakeKey];
     if (!intakeNumber) throw new Error(`Invalid intake: ${intake}`);
 
     const validDegrees = ["BCS", "BSE", "BCE", "DBA", "BIT", "BIS"];

@@ -40,7 +40,16 @@ export const createStudentSchema = z.object({
 
   email: z.string().min(1, "Please generate a student email"),
 
-  intake: z.enum(["INTAKE_40", "INTAKE_41", "INTAKE_42", "INTAKE_43"]),
+  intake: z
+    .enum(["40", "41", "42", "43"])
+    .transform(
+      (val) =>
+        `INTAKE_${val}` as
+          | "INTAKE_40"
+          | "INTAKE_41"
+          | "INTAKE_42"
+          | "INTAKE_43",
+    ),
 
   degree: z.enum(["BCS", "BSE", "BCE", "DBA", "BIT", "BIS"]),
 });

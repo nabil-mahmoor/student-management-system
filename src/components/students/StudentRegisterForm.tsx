@@ -22,8 +22,9 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
@@ -75,7 +76,10 @@ const studentSchema = z.object({
       { message: "Student age must be between 15 and 100" },
     ),
   email: z.string().min(1, "Please generate a student email"),
-  intake: IntakeEnum,
+  intake: IntakeEnum.transform(
+    (val) =>
+      `INTAKE_${val}` as "INTAKE_40" | "INTAKE_41" | "INTAKE_42" | "INTAKE_43",
+  ),
   degree: DegreeEnum,
 });
 
@@ -90,6 +94,8 @@ async function fetchNextSequence(intake: string, degree: string) {
 
 export default function StudentRegisterForm() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -103,6 +109,7 @@ export default function StudentRegisterForm() {
       degree: "",
     },
     onSubmit: async ({ value }) => {
+      setIsSubmitting(true)
       try {
         const res = await fetch("/api/students", {
           method: "POST",
@@ -118,6 +125,8 @@ export default function StudentRegisterForm() {
         router.push("/students");
       } catch {
         toast.error("Something went wrong. Please try again.");
+      } finally {
+        setIsSubmitting(false)
       }
     },
     validators: { onSubmit: studentSchema, onBlur: studentSchema },
@@ -136,6 +145,8 @@ export default function StudentRegisterForm() {
       form.setFieldValue("email", email);
     } catch {
       toast.error("Failed to generate student ID. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -322,11 +333,16 @@ export default function StudentRegisterForm() {
                     placeholder="41/SE/0032"
                   />
                   <Button
+                    disabled={isLoading}
                     type="button"
                     variant="outline"
-                    onClick={handleGenerate}
+                    onClick={() => {
+                      handleGenerate();
+                      setIsLoading(true);
+                    }}
                   >
-                    Generate
+                    {isLoading && <Loader2 className="animate-spin" />}
+                    {isLoading ? "Generating..." : "Generate"}
                   </Button>
                 </div>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -355,8 +371,9 @@ export default function StudentRegisterForm() {
           }}
         />
       </FieldGroup>
-      <Button type="submit" className="w-full mt-12">
-        Register Student
+      <Button disabled={isSubmitting} type="submit" className="w-full mt-12" >
+        {isSubmitting && <Loader2 className="animate-spin" />}
+        {isSubmitting ? "Registering..." : "Register Student"}
       </Button>
     </form>
   );
