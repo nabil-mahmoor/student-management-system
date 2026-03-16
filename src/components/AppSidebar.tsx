@@ -40,7 +40,7 @@ const items = [
   },
   {
     title: "Audit Logs",
-    url: "/audit",
+    url: "/audit-logs",
     icon: Logs,
   },
 ];
