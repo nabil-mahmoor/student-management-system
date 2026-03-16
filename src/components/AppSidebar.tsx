@@ -1,7 +1,7 @@
 "use client";
 
-import type { Session } from "@/src/services/auth/auth.types";
 import { signOut } from "@/src/services/auth/auth.actions";
+import type { Session } from "@/src/services/auth/auth.types";
 import { BookOpen, ChevronUp, LogOut, Logs, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,6 +38,11 @@ const items = [
     url: "/courses",
     icon: BookOpen,
   },
+  { 
+    title: "Enrollments", 
+    url: "/enrollments", 
+    icon: BookOpen 
+  },
   {
     title: "Audit Logs",
     url: "/audit-logs",
@@ -64,7 +69,6 @@ export default function AppSidebar({ session }: { session: Session | null }) {
               <Link href={"/"} className="py-4">
                 <Image
                   src={"/logo.svg"}
-                  
                   alt="logo"
                   width={28}
                   height={28}
@@ -84,7 +88,7 @@ export default function AppSidebar({ session }: { session: Session | null }) {
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.slice(0, 2).map((item) => (
+              {items.slice(0, 3).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url} className={linkStyle(item.url)}>
@@ -104,7 +108,7 @@ export default function AppSidebar({ session }: { session: Session | null }) {
           <SidebarGroupLabel>Tracking</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.slice(2).map((item) => (
+              {items.slice(3).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url} className={linkStyle(item.url)}>

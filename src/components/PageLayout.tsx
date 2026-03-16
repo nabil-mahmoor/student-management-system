@@ -28,6 +28,11 @@ export default function PageLayout({
             <Plus />
             <span className="md:block hidden">Create Course</span>
           </Button>
+        ) : title === "Enrollments" ? (
+          <Button onClick={() => router.push("/enrollment/create")}>
+            <Plus />
+            <span className="md:block hidden">Enroll Student</span>
+          </Button>
         ) : null}
       </div>
       {children}
