@@ -2,10 +2,13 @@
 
 import { DataTablePagination } from "@/src/components/DataTablePagination";
 import SearchBar from "@/src/components/SearchBar";
+import { DeleteCourseDrawer } from "@/src/components/courses/DeleteCourseDrawer";
 import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { User } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDataTable } from "./useDataTable";
 
 interface CourseGridProps {
@@ -21,13 +24,10 @@ export function CourseGrid({ columns, data }: CourseGridProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <SearchBar
         value={globalFilter ?? ""}
         onChange={(e) => table.setGlobalFilter(String(e.target.value))}
       />
-
-      {/* Course cards */}
       <div className="overflow-hidden space-y-4">
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => {
@@ -35,11 +35,9 @@ export function CourseGrid({ columns, data }: CourseGridProps) {
             return (
               <div
                 key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className="rounded-md p-4 border bg-white/70 hover:bg-white dark:bg-muted-foreground/5 dark:hover:bg-muted-foreground/10 cursor-pointer transition-all ease-in-out"
+                className="rounded-md p-4 border bg-white/70 hover:bg-white dark:bg-muted-foreground/5 dark:hover:bg-muted-foreground/10 transition-all ease-in-out"
               >
                 <div className="flex flex-col md:flex-row gap-8 relative">
-                  {/* Course image */}
                   <div className="relative w-full md:w-60 aspect-video">
                     <Image
                       src={course.imageUrl}
@@ -48,8 +46,6 @@ export function CourseGrid({ columns, data }: CourseGridProps) {
                       className="rounded-sm object-cover"
                     />
                   </div>
-
-                  {/* Course details */}
                   <div className="flex flex-col flex-1 gap-4">
                     <h2 className="text-[1.7rem] font-semibold md:mr-20">
                       {course.name}
@@ -69,23 +65,28 @@ export function CourseGrid({ columns, data }: CourseGridProps) {
                       ))}
                     </div>
                   </div>
-
-                  {/* Course code + enrolled count */}
-                  <>
-                    <Badge
-                      variant="secondary"
-                      className="md:bg-transparent md:text-muted-foreground border-secondary/20 md:border-border md:border md:shadow-none text-sm font-semibold absolute top-2 right-2 md:right-0"
-                    >
-                      {course.code}
-                    </Badge>
-                    <Badge
-                      variant="secondary"
-                      className="md:bg-transparent md:text-muted-foreground border-secondary/20 md:border-border md:border md:shadow-none text-sm absolute top-2 left-2 md:inset-auto md:right-0 md:bottom-0"
-                    >
-                      <User strokeWidth={3} />
-                      {course.enrolled}
-                    </Badge>
-                  </>
+                  <Badge
+                    variant="secondary"
+                    className="md:bg-transparent md:text-muted-foreground border-secondary/20 md:border-border md:border md:shadow-none text-sm font-semibold absolute top-2 right-2 md:right-0"
+                  >
+                    {course.code}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="md:bg-transparent md:text-muted-foreground border-secondary/20 md:border-border md:border md:shadow-none text-sm absolute top-2 left-2 md:inset-auto md:right-0 md:bottom-0"
+                  >
+                    <User strokeWidth={3} />
+                    {course.enrolled}
+                  </Badge>
+                </div>
+                <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/courses/${course.id}/edit`}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Link>
+                  </Button>
+                  <DeleteCourseDrawer course={course} />
                 </div>
               </div>
             );
@@ -96,8 +97,6 @@ export function CourseGrid({ columns, data }: CourseGridProps) {
           </div>
         )}
       </div>
-
-      {/* Pagination */}
       <DataTablePagination table={table} displayRowSelected={false} />
     </div>
   );
