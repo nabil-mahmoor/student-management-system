@@ -1,5 +1,5 @@
 import Image from "next/image";
-import LoginForm from "../../components/login/LoginForm";
+import LoginForm from "@/src/components/login/LoginForm";
 import { headers } from "next/headers";
 import { auth } from "@/src/services/auth";
 import { redirect } from "next/navigation";

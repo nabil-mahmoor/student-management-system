@@ -9,13 +9,8 @@ import {
   FieldLabel,
 } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/src/components/ui/input-group";
+import { Textarea } from "@/src/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
-import { CalendarIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,83 +18,123 @@ import toast from "react-hot-toast";
 import * as z from "zod";
 
 const courseSchema = z.object({
-  code: z.string(),
+  code: z
+    .string()
+    .trim()
+    .min(4, "Course code must be at least 4 characters")
+    .max(10, "Course code must not exceed 10 characters")
+    .regex(
+      /^[A-Z0-9]+$/,
+      "Course code must be uppercase letters and numbers only",
+    ),
 
-  name: z.string(),
+  name: z
+    .string()
+    .trim()
+    .min(3, "Course name must be at least 3 characters")
+    .max(100, "Course name must not exceed 100 characters"),
 
   description: z
     .string()
     .trim()
-    .min(10, "Last name must be at least 2 characters")
-    .max(500, "Last name must not exceed 500 characters"),
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must not exceed 500 characters"),
 
-  enrolled: z.number(),
+  imageUrl: z.string().url("Must be a valid image URL"),
 
-  tags: z.array(z.string()),
-
-  imageUrl: z.url(),
+  // Tags are entered as a comma-separated string then split into an array
+  tags: z.string().min(1, "At least one tag is required"),
 });
 
 export default function CreateCourseForm() {
   const router = useRouter();
 
-  const [image, setImage] = useState<String | null>();
+  // ✅ string primitive — was incorrectly typed as String (object wrapper)
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const form = useForm({
     defaultValues: {
       code: "",
       name: "",
       description: "",
-      enrolled: 0,
-      tags: [""],
       imageUrl: "",
+      tags: "", // comma-separated, split on submit
     },
     onSubmit: async ({ value }) => {
-      console.log(value);
-      toast.success("Course created");
-      router.push("/enroll")
+      try {
+        const res = await fetch("/api/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...value,
+            // Convert "algorithms, data structures" → ["algorithms", "data structures"]
+            tags: value.tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean),
+          }),
+        });
+
+        if (!res.ok) {
+          const { error } = await res.json();
+          toast.error(error ?? "Failed to create course");
+          return;
+        }
+
+        toast.success("Course created");
+        router.push("/courses");
+      } catch {
+        toast.error("Something went wrong. Please try again.");
+      }
     },
-    // validators: {
-    //   onSubmit: courseSchema,
-    //   onBlur: courseSchema,
-    // },
+    validators: {
+      onSubmit: courseSchema,
+      onBlur: courseSchema,
+    },
   });
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         form.handleSubmit();
       }}
       className="max-w-md mx-auto"
     >
       <FieldGroup>
-        <div className="relative object-cover border rounded-2xl">
-          <Image
-            src={image ?? "./vercel.svg"}
-            height={200}
-            width={200}
-            alt="course cover image"
-          />
-        </div>
+        {/* Image preview */}
+        {imagePreview && (
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border">
+            <Image
+              src={imagePreview}
+              fill
+              className="object-cover"
+              alt="Course cover preview"
+            />
+          </div>
+        )}
+
+        {/* Image URL */}
         <form.Field
           name="imageUrl"
           children={(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
-
             return (
               <Field>
-                <FieldDescription>Paste image URL</FieldDescription>
+                <FieldLabel htmlFor={field.name}>Cover Image</FieldLabel>
+                <FieldDescription>Paste a direct image URL</FieldDescription>
                 <Input
                   id={field.name}
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
-                    setImage(e);
+                    // ✅ pass the string value, not the event object
+                    setImagePreview(e.target.value);
                   }}
                   onBlur={field.handleBlur}
-                  placeholder="https://i.pinimg.com/20a471e8758f883006732aef6727d430.jpg"
+                  placeholder="https://example.com/image.jpg"
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -107,19 +142,21 @@ export default function CreateCourseForm() {
           }}
         />
 
+        {/* Course Code */}
         <form.Field
           name="code"
           children={(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
-
             return (
               <Field>
                 <FieldLabel htmlFor={field.name}>Course Code</FieldLabel>
                 <Input
                   id={field.name}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) =>
+                    field.handleChange(e.target.value.toUpperCase())
+                  }
                   onBlur={field.handleBlur}
                   placeholder="CS30184"
                 />
@@ -129,12 +166,12 @@ export default function CreateCourseForm() {
           }}
         />
 
+        {/* Course Name */}
         <form.Field
           name="name"
           children={(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
-
             return (
               <Field>
                 <FieldLabel htmlFor={field.name}>Course Name</FieldLabel>
@@ -151,6 +188,7 @@ export default function CreateCourseForm() {
           }}
         />
 
+        {/* Description */}
         <form.Field
           name="description"
           children={(field) => {
@@ -159,25 +197,46 @@ export default function CreateCourseForm() {
             return (
               <Field>
                 <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    placeholder="DD/MM/YYYY"
-                  />
-                  <InputGroupAddon>
-                    <CalendarIcon />
-                    <span className="sr-only">Select date</span>
-                  </InputGroupAddon>
-                </InputGroup>
+                <Textarea
+                  id={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  placeholder="A brief overview of what this course covers..."
+                  rows={4}
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        />
+
+        {/* Tags */}
+        <form.Field
+          name="tags"
+          children={(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field>
+                <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
+                <FieldDescription>
+                  Comma-separated — e.g. algorithms, data structures, graphs
+                </FieldDescription>
+                <Input
+                  id={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                  placeholder="algorithms, data structures, graphs"
+                />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
           }}
         />
       </FieldGroup>
+
       <Button type="submit" className="w-full mt-12">
         Create Course
       </Button>
